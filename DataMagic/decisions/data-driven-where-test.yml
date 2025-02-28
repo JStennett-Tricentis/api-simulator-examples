@@ -1,0 +1,23 @@
+schema: SimV1
+
+services:
+  - name: datadrivenwheretest
+    steps:
+      - connection:
+          endpoint: http://localhost:55513/decision
+          listen: false
+        direction: Out
+        message:
+          headers:
+            - key: Content-Type
+              value: application/json
+          method: POST
+          payload: |-
+            {
+              "a": "2",
+              "b": "ABC",
+              "c": "D"
+            }
+      - direction: In
+        message:
+          payload: ""

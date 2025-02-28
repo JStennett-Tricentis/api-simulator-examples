@@ -1,0 +1,31 @@
+schema: SimV1
+
+connections:
+  - forward:
+      learning:
+        sort: ByResource
+        patterns:
+          - type: Uri
+      mode: Learning
+      to: realMagic
+    name: Magic_LearningCon
+    port: 14466
+
+  - endpoint: https://api.magicthegathering.io
+    listen: false
+    name: realMagic
+
+services:
+  - name: Magic_test
+    steps:
+      - connection:
+          endpoint: http://localhost:14466
+          listen: false
+        direction: Out
+        message:
+          headers:
+            - key: Content-Type
+              value: application/json
+          method: GET
+
+      - direction: In

@@ -1,0 +1,22 @@
+schema: SimV1
+
+connections:
+  - name: http
+
+services:
+  - name: split buffer
+    steps:
+      - to: http
+        message:
+          payload: a-b-c-d
+      - verify:
+          - value: c
+
+  - steps:
+      - trigger:
+          - value: a-b-c-d
+        buffer:
+          - name: buffer
+            value: "{SPLITBUFFER[-]}"
+      - insert:
+          - value: "{B[buffer1]} {B[buffer2]} {B[buffer3]} {B[buffer4]}"

@@ -1,0 +1,27 @@
+schema: SimV1
+
+connections:
+  - forward:
+      learning:
+        patterns:
+          - type: Path
+          - key: name
+            type: Query
+      mode: Learning
+      to: realUniversityAPI
+    name: University_LearningCon
+    port: 14453
+  - endpoint: http://universities.hipolabs.com/search
+    listen: false
+    name: realUniversityAPI
+
+services:
+  - name: university_api_test
+    steps:
+      - connection:
+          endpoint: http://localhost:14453/search?name=Harvard
+          listen: false
+        direction: Out
+        message:
+          method: GET
+      - direction: In

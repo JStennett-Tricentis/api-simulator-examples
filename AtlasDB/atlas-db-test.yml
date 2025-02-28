@@ -1,0 +1,82 @@
+schema: SimV1
+name: atlasDataServiceTest
+
+resources:
+  - file: data-files.csv
+    name: dataFiles
+
+connections:
+  - name: atlasCon
+    port: 25151
+  - endpoint: http://localhost:25151
+    listen: false
+    name: ToAtlasCon
+
+services:
+  - name: testFindCustomerById
+    steps:
+      - direction: Out
+        to: ToAtlasCon
+        insert:
+          - type: Path
+            value: AtlasDataApi/FindCustomer/746878731
+          - header: Accept
+            value: application/json
+        name: findSpecificCustomerRequest
+      - direction: In
+        name: findSpecificCustomerResponse
+        verify:
+          - property: StatusCode
+            value: 200 OK
+
+  - name: testFindCustomerNotFound
+    steps:
+      - direction: Out
+        to: ToAtlasCon
+        insert:
+          - type: Path
+            value: AtlasDataApi/FindCustomer/999999999
+          - property: Accept
+            value: application/json
+        name: findNonexistentCustomerRequest
+      - direction: In
+        name: findNonexistentCustomerResponse
+        verify:
+          - property: StatusCode
+            value: 404 Not Found
+
+  - name: testGetAllCustomers
+    steps:
+      - direction: Out
+        to: ToAtlasCon
+        insert:
+          - type: Path
+            value: AtlasDataApi/GetAllCustomers?pageNumber=1&pageSize=10
+          - property: Accept
+            value: application/json
+        name: getAllCustomersRequest
+      - direction: In
+        name: getAllCustomersResponse
+        verify:
+          - property: StatusCode
+            value: 200 OK
+          - property: Body
+            present: true
+
+  - name: testGetAllCustomersWithDifferentPagination
+    steps:
+      - direction: Out
+        to: ToAtlasCon
+        insert:
+          - type: Path
+            value: AtlasDataApi/GetAllCustomers?pageNumber=2&pageSize=5
+          - property: Accept
+            value: application/json
+        name: getAllCustomersPage2Request
+      - direction: In
+        name: getAllCustomersPage2Response
+        verify:
+          - property: StatusCode
+            value: 200 OK
+          - property: Body
+            present: true

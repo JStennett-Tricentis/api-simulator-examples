@@ -1,0 +1,46 @@
+schema: SimV1
+
+connections:
+  - name: 20250213con
+    port: 55513
+
+resources:
+  - name: datadrivenwhere
+    type: Table
+    file: data-driven-where.csv
+
+services:
+  - name: decisions
+    steps:
+      - direction: In
+        trigger:
+          - type: Path
+            value: /decision
+          - property: Method
+            value: POST
+        buffer:
+          - jsonPath: a
+            name: buffera
+          - jsonPath: b
+            name: bufferb
+          - jsonPath: c
+            name: bufferc
+
+      - direction: Out
+        resource:
+          read:
+            - ref: datadrivenwhere
+              one: "(A == '{B[buffera]}' AND B == '{B[bufferb]}') OR (C == '{B[bufferc]}')"
+              name: result
+        message:
+          statusCode: 200
+          payload: |-
+            {
+                "matchedonrow":  "empty",
+                "buffervalues": "empty"
+            }
+        insert:
+          - jsonPath: buffervalues
+            value: " A is {B[buffera]}, B is {B[bufferb]}, C is {B[bufferc]}"
+          - jsonPath: matchedonrow
+            value: "{B[result.row]}"

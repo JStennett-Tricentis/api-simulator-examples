@@ -1,0 +1,12 @@
+schema: SimV1
+
+connections:
+  - name: http
+
+services:
+  - name: Welcome
+    steps:
+      - name: Request
+      - name: Response
+        message:
+          payload: It works!

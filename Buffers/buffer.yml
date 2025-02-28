@@ -1,0 +1,246 @@
+schema: SimV1
+name: dynamic buffer
+
+includes:
+  - ../http
+
+services:
+  - name: buffer scenario 1
+    steps:
+      - to: http
+        buffer:
+          - key: sid
+            value: "{rnd}"
+        insert:
+          - type: Path
+            value: buffer/scenario/{b[sid]}
+      - verify:
+          - value: scenario started for {b[SID]}
+      - to: http
+        insert:
+          - type: Header
+            key: sid
+            value: "{b[sid]}"
+      - verify:
+          - value: scenario completed for {b[sid]}
+
+  - name: buffer scenario 2
+    steps:
+      - to: http
+        buffer:
+          - key: sid
+            value: "{rnd}"
+        insert:
+          - type: Path
+            value: buffer/scenario/{b[sid]}
+      - verify:
+          - value: scenario started for {b[sid]}
+      - to: http
+        insert:
+          - type: Header
+            key: sid
+            value: "{b[sid]}"
+      - verify:
+          - value: scenario completed for {b[sid]}
+
+  - name: buffer scenario 3
+    steps:
+      - to: http
+        buffer:
+          - key: sid
+            value: "{rnd}"
+        insert:
+          - type: Path
+            value: buffer/scenario/{b[sid]}
+      - verify:
+          - value: scenario started for {b[sid]}
+      - to: http
+        insert:
+          - type: Header
+            key: sid
+            value: "{b[sid]}"
+      - verify:
+          - value: scenario completed for {b[sid]}
+
+  - name: buffer scenario service
+    steps:
+      - trigger:
+          - type: Path
+            value: buffer/scenario/*
+        buffer:
+          - type: Path
+            value: "buffer/scenario/{xb[sid]}"
+      - insert:
+          - value: scenario started for {b[sid]}
+      - trigger:
+          - type: Header
+            key: sid
+            value: "{b[sid]}"
+      - insert:
+          - value: scenario completed for {b[sid]}
+
+  - name: split buffer
+    steps:
+      - to: http
+        message:
+          payload: a;b;c;d
+      - verify:
+          - value: c
+
+  - steps:
+      - trigger:
+          - value: a;b;c;d
+        buffer:
+          - name: buffer
+            value: "{SPLITBUFFER[;]}"
+      - insert:
+          - value: "{B[buffer3]}"
+
+  - name: substring buffer
+    steps:
+      - to: http
+        message:
+          payload: substring
+        insert:
+          - type: Path
+            value: this/path/ends/with/abc
+      - verify:
+          - value: string
+          - range: 2..4
+            value: ri
+
+  - steps:
+      - trigger:
+          - value: substring
+          - type: Path
+            range: ^3..
+            value: abc
+        buffer:
+          - name: substring
+            range: ^6..
+      - insert:
+          - value: "{B[substring]}"
+
+  - name: temporary buffer
+    steps:
+      - to: http
+        buffer:
+          - name: random
+            value: "{RND[1][5]}"
+          - type: Header
+            key: random_insert
+            name: random_insert
+        insert:
+          - value: "{B[random]}"
+          - type: Header
+            key: random
+            value: "{B[random]}"
+          - type: Header
+            key: random_insert
+            value: "{RND[1][5]}"
+      - verify:
+          - operator: GreaterOrEqual
+            dataType: Numeric
+            value: 5
+          - type: Header
+            key: random
+            operator: LessOrEqual
+            dataType: Numeric
+            value: 10
+          - type: Header
+            key: random_insert
+            value: "{B[random_insert]}"
+
+  - name: temporary buffer service
+    steps:
+      - trigger:
+          - operator: GreaterOrEqual
+            dataType: Numeric
+            value: 1
+          - type: Header
+            key: random
+            operator: LessOrEqual
+            dataType: Numeric
+            value: 5
+        buffer:
+          - name: random
+            value: "{RND[5][10]}"
+          - name: random_insert
+            type: Header
+            key: random_insert
+      - insert:
+          - value: "{B[random]}"
+          - type: Header
+            key: random
+            value: "{B[random]}"
+          - type: Header
+            key: random_insert
+            value: "{B[random_insert]}"
+
+  - name: embedded buffer
+    steps:
+      - to: http
+        message:
+          payload: this is embedded
+      - verify:
+          - value: somewhere inside there is a this is embedded and no path needed
+
+  - steps:
+      - trigger:
+          - value: this is embedded
+        buffer:
+          - name: buffer
+      - message:
+          payload: somewhere inside there is a %{ buffer} and no path needed
+
+  - name: embedded buffer payload file
+    steps:
+      - to: http
+        message:
+          payload: this is embedded payload file
+      - verify:
+          - jsonPath: payload
+            value: somewhere inside there is a this is embedded payload file and no path needed
+
+  - steps:
+      - trigger:
+          - value: this is embedded payload file
+        buffer:
+          - name: buffer
+      - message:
+          payloadFile: buffer_payload.json
+
+  - name: embedded buffer insert file
+    steps:
+      - to: http
+        message:
+          payload: this is embedded insert file
+      - verify:
+          - jsonPath: payload
+            value: somewhere inside there is a this is embedded insert file and no path needed
+
+  - steps:
+      - trigger:
+          - value: this is embedded insert file
+        buffer:
+          - name: buffer
+      - insert:
+          - file: buffer_payload.json
+
+  - name: verify buffer
+    steps:
+      - to: http
+        message:
+          payload: verify buffer
+      - verify:
+          - value: verify buffer worked
+
+  - steps:
+      - trigger:
+          - value: verify buffer
+        buffer:
+          - name: payload
+        verify:
+          - value: "{b[payload]}"
+      - message:
+          payload: verify buffer worked

@@ -1,0 +1,27 @@
+schema: SimV1
+name: filecatTest
+
+connections:
+  - name: filecatcon
+    port: 21111
+  - endpoint: http://localhost:21111/
+    listen: false
+    name: filecatclient
+
+services:
+  - name: testFileDownload
+    steps:
+      - direction: Out
+        to: filecatclient
+        insert:
+          - value: filecat
+        message:
+          method: GET
+          payload: ""
+        name: requestCatFile
+      - direction: In
+        from: filecatclient
+        name: verifyCatFileResponse
+        verify:
+          - property: StatusCode
+            value: 200 OK

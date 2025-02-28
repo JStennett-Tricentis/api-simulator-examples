@@ -1,0 +1,83 @@
+schema: SimV1
+name: calculatorTest
+
+services:
+  - name: testAddition
+    steps:
+      - direction: Out
+        to: calculator
+        insert:
+          - uri: /addition
+          - jsonPath: augend
+            value: 5
+          - jsonPath: addend
+            value: 3
+      - direction: In
+        from: calculator
+        verify:
+          - jsonPath: sum
+            value: 8
+
+  - name: testSubtraction
+    steps:
+      - direction: Out
+        to: calculator
+        insert:
+          - uri: /subtraction
+          - jsonPath: minuend
+            value: 10
+          - jsonPath: subtrahend
+            value: 4
+      - direction: In
+        from: calculator
+        verify:
+          - jsonPath: difference
+            value: 6
+
+  - name: testMultiplication
+    steps:
+      - direction: Out
+        to: calculator
+        insert:
+          - uri: /multiplication
+          - jsonPath: multiplier
+            value: 7
+          - jsonPath: multiplicand
+            value: 6
+      - direction: In
+        from: calculator
+        verify:
+          - jsonPath: product
+            value: 42
+
+  - name: testDivision
+    steps:
+      - direction: Out
+        to: calculator
+        insert:
+          - uri: /division
+          - jsonPath: dividend
+            value: 20
+          - jsonPath: divisor
+            value: 5
+      - direction: In
+        from: calculator
+        verify:
+          - jsonPath: quotient
+            value: 4
+
+  - name: testDivisionByZero
+    steps:
+      - direction: Out
+        to: calculator
+        insert:
+          - uri: /division
+          - jsonPath: dividend
+            value: 10
+          - jsonPath: divisor
+            value: 0
+      - direction: In
+        from: calculator
+        verify:
+          - jsonPath: quotient
+            value: Infinity

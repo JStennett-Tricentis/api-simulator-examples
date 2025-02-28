@@ -1,0 +1,90 @@
+schema: SimV1
+name: mqServiceTest
+
+templates:
+  - name: MQconnection
+    type: IbmMq
+    channel: CH1
+    manager: OSV
+    endpoint: your.queuemanager.com
+
+connections:
+  - name: TestMQqueueIn
+    basedOn: MQconnection
+    listen: true
+    queue: demo.in
+
+  - name: TestMQqueueOut
+    basedOn: MQconnection
+    listen: true
+    queue: demo.out
+
+  - name: TestMQqueueInWrite
+    basedOn: MQconnection
+    listen: false
+    queue: demo.in
+
+  - name: TestMQqueueOutWrite
+    basedOn: MQconnection
+    listen: false
+    queue: demo.out
+
+services:
+  - name: testEmployeeIdLookup
+    steps:
+      - name: sendEmployeeIdRequest
+        direction: Out
+        to: TestMQqueueInWrite
+        message:
+          payload: >-
+            {
+              "person": { "empId": "123456" },
+              "message": "Testing MQ Employee Lookup"
+            }
+
+      - name: verifyEmployeeResponse
+        direction: In
+        from: TestMQqueueOut
+        verify:
+          - jsonPath: name
+            value: chris colosimo
+          - jsonPath: result
+            value: test ok - MQ plain
+
+  - name: testDifferentEmployeeId
+    steps:
+      - name: sendDifferentEmployeeIdRequest
+        direction: Out
+        to: TestMQqueueInWrite
+        message:
+          payload: >-
+            {
+              "person": { "empId": "789012" },
+              "message": "Testing MQ with different employee ID"
+            }
+
+      - name: verifyDifferentEmployeeResponse
+        direction: In
+        from: TestMQqueueOut
+        verify:
+          - jsonPath: name
+            present: true
+
+  - name: testMalformedRequest
+    steps:
+      - name: sendMalformedRequest
+        direction: Out
+        to: TestMQqueueInWrite
+        message:
+          payload: >-
+            {
+              "employee": { "id": "123456" },
+              "message": "Malformed request with incorrect structure"
+            }
+
+      - name: checkForErrorResponse
+        direction: In
+        from: TestMQqueueOut
+        verify:
+          - jsonPath: error
+            present: true

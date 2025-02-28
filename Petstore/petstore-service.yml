@@ -1,0 +1,79 @@
+schema: SimV1
+name: Swagger Petstore
+
+connections:
+  - name: petCon
+    port: 23432
+  - endpoint: https://petstore.swagger.io/v2/
+    listen: false
+    name: realPetstoreEndpoint
+
+services:
+  - name: /v2/pet - POST - addPet
+    steps:
+      - buffer:
+          - jsonPath: name
+            name: petName
+        direction: In
+        from: petCon
+        name: add pet request
+        trigger:
+          - type: Path
+            value: /v2/pet
+          - property: Method
+            value: POST
+      - direction: Out
+        insert:
+          - jsonPath: id
+            value: "{RND[4]}"
+          - jsonPath: name
+            value: "{B[petName]}"
+        message:
+          headers:
+            - key: content-type
+              value: application/json
+          payload: |-
+            {
+              "id": 0,
+              "category": {
+                "id": 0,
+                "name": "string"
+              },
+              "name": "doggie",
+              "photoUrls": [
+                "string"
+              ],
+              "tags": [
+                {
+                  "id": 0,
+                  "name": "string"
+                }
+              ],
+              "status": "available"
+            }
+          statusCode: 200
+        name: add pet response
+
+  - name: /v2/pet - GET - findByStatus
+    steps:
+      - buffer:
+          - key: status
+            name: petStatus
+            type: Query
+        direction: In
+        from: petCon
+        name: find pet request
+        trigger:
+          - type: Path
+            value: /v2/pet/findByStatus
+          - property: Method
+            value: GET
+      - direction: Out
+        insert:
+          - file: ./Petstore/data/{B[petStatus]}.json
+        message:
+          headers:
+            - key: content-type
+              value: application/json
+          statusCode: 200
+        name: find pet response

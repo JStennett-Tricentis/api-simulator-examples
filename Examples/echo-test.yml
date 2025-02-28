@@ -1,0 +1,39 @@
+schema: SimV1
+name: echoTest
+
+services:
+  - name: testEcho
+    steps:
+      - direction: Out
+        to: echo
+        insert:
+          - name: request
+            value: "Hello, Echo Service!"
+      - direction: In
+        from: echo
+        verify:
+          - value: "Response from echo: Hello, Echo Service!"
+
+  - name: testEchoNumbers
+    steps:
+      - direction: Out
+        to: echo
+        insert:
+          - name: request
+            value: "12345"
+      - direction: In
+        from: echo
+        verify:
+          - value: "Response from echo: 12345"
+
+  - name: testEchoJSON
+    steps:
+      - direction: Out
+        to: echo
+        insert:
+          - name: request
+            value: '{"message": "Testing JSON"}'
+      - direction: In
+        from: echo
+        verify:
+          - value: 'Response from echo: {"message": "Testing JSON"}'

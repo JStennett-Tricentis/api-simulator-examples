@@ -1,0 +1,114 @@
+schema: SimV1
+
+connections:
+  - name: conditionstrigger
+    port: 22622
+  - name: conditionssout
+    endpoint: http://localhost:22622
+    listen: false
+
+# Simulations
+services:
+  - name: OR condition Sim
+    steps:
+      - name: OR condition SimRequest
+        trigger:
+          - jsonPath: $[?(@.category == 'Drama' || @.price < 20)]
+            exists: true
+      - message:
+          payload: |-
+            SUCCESS: OR condition - This selects books where the category is "Drama" or the price is less than 20.
+            trigger: jsonPath: $[?(@.category == 'Drama' || @.price < 20)]
+        name: OR condition SimResponse
+
+  - name: AND condition Sim
+    steps:
+      - name: AND condition SimRequest
+        trigger:
+          - jsonPath: $[?(@.author == 'John Doe' && @.price < 30)]
+            exists: true
+      - message:
+          payload: |-
+            SUCCESS: AND condition Sim - This selects books where the author is "John Doe" and the price is less than 30.
+            trigger: jsonPath: $[?(@.author == 'John Doe' && @.price < 30)]
+        name: AND condition SimSimResponse
+
+  - name: AND OR condition Sim
+    steps:
+      - name: AND OR condition Sim Request
+        trigger:
+          #- jsonPath: $[?(@.price > 20)]
+          #- jsonPath: $[?(@.category == 'Fantasy' || @.rating > 4.5)]
+          #- jsonPath: $[?(@.price > 20) && (@.category == 'Fantasy' || @.rating > 4.5)]
+          - jsonPath: $[?(@.price > 20 && @.category == 'Fantasy' || @.price > 20 && @.rating > 4.5)]
+
+            exists: true
+      - message:
+          payload: |-
+            SUCCESS: AND/OR condition Sim - This selects books where the price is greater than 20 and (category is "Fantasy" or rating is greater than 4.5).
+            trigger: jsonPath: $[?(@.price > 20 && (@.category == 'Fantasy' || @.rating > 4.5))]
+        name: AND OR condition Sim Response
+
+  # Tests
+  - name: "OR Test (category=Drama OR Price < 20)"
+    steps:
+      - name: OR condition test Request
+        direction: Out
+        to: conditionssout
+        message:
+          headers:
+            - key: Content-Type
+              value: application/json
+          payload: |-
+            [
+              {
+                "title": "Book A",
+                "author": "mike Rowe",
+                "category": "Comedy",
+                "price": 19,
+                "rating": 4.5
+              }
+            ]
+      - name: OR condition test Response
+
+  - name: "AND Test (author = John Doe AND price < 30)"
+    steps:
+      - name: AND condition test Request
+        direction: Out
+        to: conditionssout
+        message:
+          headers:
+            - key: Content-Type
+              value: application/json
+          payload: |-
+            [
+              {
+                "title": "Book A",
+                "author": "John Doe",
+                "category": "fiction",
+                "price": 29,
+                "rating": 4.5
+              }
+            ]
+      - name: AND condition test Response
+
+  - name: "AND OR Test (price > 20 AND (category=Fantasy OR rating > 4.5))"
+    steps:
+      - name: AND OR condition test Request
+        direction: Out
+        to: conditionssout
+        message:
+          headers:
+            - key: Content-Type
+              value: application/json
+          payload: |-
+            [
+              {
+                "title": "Book A",
+                "author": "John Doe",
+                "category": "Fantasy",
+                "price": 45,
+                "rating": 4.7
+              }
+            ]
+      - name: AND OR condition test Response

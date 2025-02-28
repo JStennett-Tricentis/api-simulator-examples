@@ -1,0 +1,11 @@
+schema: SimV1
+name: default
+
+services:
+  - steps:
+      - direction: Out
+        to: hello
+        insert:
+          - uri: /hello
+      - verify:
+          - value: Hello world!

@@ -1,0 +1,36 @@
+schema: SimV1
+
+connections:
+  - forward:
+      learning:
+        sort: ByResource
+        patterns:
+          - jsonPath: message
+          - jsonPath: userId
+      mode: Learning
+      to: realEcho
+    name: Echo_LearningCon
+    port: 14455
+
+  - endpoint: https://postman-echo.com/post
+    listen: false
+    name: realEcho
+
+services:
+  - name: echo_test
+    steps:
+      - connection:
+          endpoint: http://localhost:14455
+          listen: false
+        direction: Out
+        message:
+          headers:
+            - key: Content-Type
+              value: application/json
+          method: POST
+          payload: |-
+            {
+              "message": "Hello, world!",
+              "userId": 12345
+            }
+      - direction: In
